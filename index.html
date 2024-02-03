@@ -1,98 +1,260 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Todo App</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        input, button {
-            margin-bottom: 10px;
-        }
-        .completed {
-            text-decoration: line-through;
-            color: #808080;
-        }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f8f9fa;
+      }
+
+      .container {
+        width: 400px;
+        margin: 20px;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        background-color: #ffffff;
+        text-align: center;
+      }
+
+      h1 {
+        color: #343a40;
+        margin-bottom: 20px;
+      }
+
+      input,
+      button {
+        margin-bottom: 10px;
+        padding: 10px;
+        font-size: 16px;
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+      }
+
+      button {
+        cursor: pointer;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 3px;
+      }
+
+      button:hover {
+        background-color: #218838;
+      }
+
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+
+      li {
+        background-color: #f8f9fa;
+        margin-bottom: 10px;
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: relative;
+        color: #343a40;
+      }
+
+      .completed {
+        text-decoration: line-through;
+        color: #6c757d;
+      }
+
+      .timer {
+        font-size: 14px;
+        color: #dc3545;
+        margin-top: 5px;
+      }
+
+      .tab {
+        display: inline-block;
+        padding: 10px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        border-radius: 3px;
+        margin-right: 5px;
+      }
+
+      .tab:hover {
+        background-color: #0056b3;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Todo App</h1>
 
-<h1>Todo App</h1>
-<input type="text" id="newTodo" placeholder="Add a new Todo">
-<button onclick="addTodo()">Add Todo</button>
+      <input type="text" id="newTodo" placeholder="Add a new Todo" />
+      <button onclick="addTodo()">Add Todo</button>
 
-<ul id="todoList"></ul>
+      <div>
+        <div class="tab" onclick="showTab('active')">Active</div>
+        <div class="tab" onclick="showTab('completed')">Completed</div>
+        <div class="tab" onclick="showTab('missed')">Missed</div>
+      </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', displayTodos);
+      <ul id="todoList"></ul>
+    </div>
 
-    function addTodo() {
-        var newTodo = document.getElementById('newTodo').value;
-        if (newTodo.trim() === '') {
-            alert('Please enter a valid Todo.');
-            return;
+    <script>
+      var activeTab = "active";
+
+      document.addEventListener("DOMContentLoaded", displayTodos);
+
+      function addTodo() {
+        var newTodo = document.getElementById("newTodo").value;
+        var expiryInput = prompt(
+          "Enter expiry time for the todo (e.g., 2h or 30m):"
+        );
+
+        if (newTodo.trim() === "" || !isValidExpiryInput(expiryInput)) {
+          alert(
+            "Please enter a valid Todo and a valid expiry time (e.g., 2h or 30m)."
+          );
+          return;
         }
 
         var todos = getTodosFromStorage();
-        todos.push({ text: newTodo, completed: false });
+        var expiryTime = parseExpiryInput(expiryInput);
+        todos.push({
+          text: newTodo,
+          completed: false,
+          expiryTime: expiryTime,
+          createdAt: Date.now(),
+        });
         saveTodosToStorage(todos);
         displayTodos();
-        document.getElementById('newTodo').value = '';
-    }
+        document.getElementById("newTodo").value = "";
+      }
 
-    function deleteTodo(index) {
+      function isValidExpiryInput(input) {
+        // Check if the input matches the format: [number]h or [number]m
+        return /^(\d+h|\d+m)$/i.test(input.trim());
+      }
+
+      function parseExpiryInput(input) {
+        var matches = input
+          .trim()
+          .toLowerCase()
+          .match(/^(\d+)([hm])$/);
+
+        if (!matches) {
+          return NaN; // Invalid input format
+        }
+
+        var value = parseInt(matches[1]);
+        var unit = matches[2];
+
+        if (unit === "h") {
+          // Convert hours to milliseconds
+          return value * 60 * 60 * 1000;
+        } else if (unit === "m") {
+          // Convert minutes to milliseconds
+          return value * 60 * 1000;
+        } else {
+          return NaN; // Invalid unit
+        }
+      }
+
+      function deleteTodo(index) {
         var todos = getTodosFromStorage();
         todos.splice(index, 1);
         saveTodosToStorage(todos);
         displayTodos();
-    }
+      }
 
-    function editTodo(index) {
+      function editTodo(index) {
         var todos = getTodosFromStorage();
-        var newText = prompt('Edit Todo:', todos[index].text);
+        var newText = prompt("Edit Todo:", todos[index].text);
         if (newText !== null) {
-            todos[index].text = newText;
-            saveTodosToStorage(todos);
-            displayTodos();
+          todos[index].text = newText;
+          saveTodosToStorage(todos);
+          displayTodos();
         }
-    }
+      }
 
-    function toggleCompleted(index) {
+      function toggleCompleted(index) {
         var todos = getTodosFromStorage();
         todos[index].completed = !todos[index].completed;
         saveTodosToStorage(todos);
         displayTodos();
-    }
+      }
 
-    function displayTodos() {
+      function showTab(tab) {
+        activeTab = tab;
+        displayTodos();
+      }
+
+      function displayTodos() {
         var todos = getTodosFromStorage();
-        var todoList = document.getElementById('todoList');
-        todoList.innerHTML = '';
+        var todoList = document.getElementById("todoList");
+        todoList.innerHTML = "";
 
-        todos.forEach(function(todo, index) {
-            var listItem = document.createElement('li');
+        var now = Date.now();
+
+        todos.forEach(function (todo, index) {
+          var listItem = document.createElement("li");
+
+          var remainingTime = todo.expiryTime + todo.createdAt - now;
+
+          var timerElement = "";
+
+          if (activeTab === "active" && !todo.completed && remainingTime > 0) {
+            // Display the remaining time in hours and minutes for active todos
+            var hours = Math.floor(remainingTime / (60 * 60 * 1000));
+            var minutes = Math.ceil(
+              (remainingTime % (60 * 60 * 1000)) / (60 * 1000)
+            );
+            timerElement = `<div class="timer">Time left: ${hours}h ${minutes}m</div>`;
+          }
+
+          if (
+            (activeTab === "active" && !todo.completed && remainingTime > 0) ||
+            (activeTab === "completed" && todo.completed) ||
+            (activeTab === "missed" && !todo.completed && remainingTime <= 0)
+          ) {
             listItem.innerHTML = `
-                <span class="${todo.completed ? 'completed' : ''}">${todo.text}</span>
+                <span class="${todo.completed ? "completed" : ""}">${
+              todo.text
+            }</span>
+                ${timerElement}
                 <button onclick="editTodo(${index})">Edit</button>
                 <button onclick="deleteTodo(${index})">Delete</button>
-                <button onclick="toggleCompleted(${index})">${todo.completed ? 'Unmark' : 'Mark'} as Completed</button>
+                <button onclick="toggleCompleted(${index})">${
+              todo.completed ? "Unmark" : "Mark"
+            } as Completed</button>
             `;
+
             todoList.appendChild(listItem);
+          }
         });
-    }
+      }
 
-    function getTodosFromStorage() {
-        var todos = JSON.parse(localStorage.getItem('todos')) || [];
+      function getTodosFromStorage() {
+        var todos = JSON.parse(localStorage.getItem("todos")) || [];
         return todos;
-    }
+      }
 
-    function saveTodosToStorage(todos) {
-        localStorage.setItem('todos', JSON.stringify(todos));
-    }
-</script>
+      function saveTodosToStorage(todos) {
+        localStorage.setItem("todos", JSON.stringify(todos));
+      }
 
-</body>
+      // Update the timer every second
+      setInterval(displayTodos, 1000);
+    </script>
+  </body>
 </html>

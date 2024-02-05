@@ -4,6 +4,39 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Todo App</title>
+    
+    <!-- Coustom URL -->
+    <script>
+      function getUrlParameter(name) {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
+        var results = regex.exec(location.search);
+        return results === null
+          ? ""
+          : decodeURIComponent(results[1].replace(/\+/g, " "));
+      }
+
+      function getActiveTabFromUrl() {
+        var tab = getUrlParameter("tab");
+        return tab || "active";
+      }
+
+      function updateUrl(tab) {
+        history.pushState(null, null, "?tab=" + tab);
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        activeTab = getActiveTabFromUrl();
+        displayTodos();
+      });
+
+      function showTab(tab) {
+        activeTab = tab;
+        updateUrl(tab);
+        displayTodos();
+      }
+    </script>
+
     <style>
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -102,9 +135,11 @@
       <button onclick="addTodo()">Add Todo</button>
 
       <div>
-        <div class="tab" onclick="showTab('active')">Active</div>
-        <div class="tab" onclick="showTab('completed')">Completed</div>
-        <div class="tab" onclick="showTab('missed')">Missed</div>
+        <a href="?tab=active" class="tab" onclick="showTab('active')">Active</a>
+        <a href="?tab=completed" class="tab" onclick="showTab('completed')"
+          >Completed</a
+        >
+        <a href="?tab=missed" class="tab" onclick="showTab('missed')">Missed</a>
       </div>
 
       <ul id="todoList"></ul>
